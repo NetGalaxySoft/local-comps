@@ -10,6 +10,38 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y build-essential curl wget git unzip zip nano htop \
   software-properties-common ca-certificates gnupg lsb-release mc
 
+echo
+echo "🧰 Инсталиране на Visual Studio Code..."
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+sudo install -o root -g root -m 644 packages.microsoft.gpg /usr/share/keyrings/
+sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/packages.microsoft.gpg] \
+https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
+sudo apt update
+sudo apt install -y code
+
+echo
+echo "🌐 Инсталиране на Brave браузър..."
+sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave.com/static-assets/archive.key
+echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave.com/linux/ stable main" | \
+sudo tee /etc/apt/sources.list.d/brave-browser-release.list > /dev/null
+sudo apt update
+sudo apt install -y brave-browser
+
+echo
+echo "🌍 Инсталиране на Google Chrome..."
+wget -qO chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+sudo apt install -y ./chrome.deb
+rm chrome.deb
+
+echo
+echo "🛡️ Инсталиране на Tor Browser..."
+sudo apt install -y tor torsocks
+wget https://www.torproject.org/dist/torbrowser/13.0.13/tor-browser-linux64-13.0.13_ALL.tar.xz
+tar -xf tor-browser-linux64-13.0.13_ALL.tar.xz
+rm tor-browser-linux64-13.0.13_ALL.tar.xz
+mv tor-browser* ~/TorBrowser
+~/TorBrowser/start-tor-browser.desktop --register-app
+
 # Python и виртуална среда
 sudo apt install -y python3 python3-pip python3-venv
 

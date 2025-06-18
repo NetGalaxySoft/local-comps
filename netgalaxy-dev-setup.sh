@@ -10,6 +10,9 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y build-essential curl wget git unzip zip nano htop \
   software-properties-common ca-certificates gnupg lsb-release mc
 
+# Пощенски клиент
+sudo apt install -y thunderbird
+
 echo
 echo "🧰 Инсталиране на Visual Studio Code..."
 wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg

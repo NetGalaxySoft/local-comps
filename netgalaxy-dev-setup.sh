@@ -10,8 +10,13 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y build-essential curl wget git unzip zip nano htop \
   software-properties-common ca-certificates gnupg lsb-release mc
 
-# Пощенски клиент
-sudo apt install -y thunderbird
+# Пощенски клиент: Thunderbird
+if ! command -v thunderbird &> /dev/null; then
+  echo "📬 Инсталиране на пощенски клиент Thunderbird..."
+  sudo apt install -y thunderbird
+else
+  echo "✅ Thunderbird вече е инсталиран."
+fi
 
 echo
 echo "🧰 Инсталиране на Visual Studio Code..."

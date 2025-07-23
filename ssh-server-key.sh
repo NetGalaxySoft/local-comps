@@ -379,6 +379,20 @@ echo ""
 echo "[9] ЗАПИС В SSH CONFIG ФАЙЛА..."
 echo "-------------------------------------------------------------------------"
 
+# Корекция за HOME при използване на sudo
+if [[ -n "$SUDO_USER" && "$HOME" == "/root" ]]; then
+  user_home=$(eval echo "~$SUDO_USER")
+else
+  user_home="$HOME"
+fi
+
+config_file="$user_home/.ssh/config"
+
+# Уверяваме се, че ~/.ssh и config файла съществуват
+mkdir -p "$(dirname "$config_file")"
+touch "$config_file"
+chmod 600 "$config_file"
+
 # Проверка дали потребителят избра да презапише записа
 if grep -qE "^Host $quick_connect\$" "$config_file" 2>/dev/null; then
   if [[ "$overwrite_config" == "true" ]]; then

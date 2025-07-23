@@ -32,6 +32,22 @@
 ---
 
 ## ▶️ Начин на използване
+
+Скриптът **не поддържа директно изпълнение чрез `curl ... | bash`**, защото използва GitHub токен за достъп. Трябва първо да бъде изтеглен локално, след което да се стартира.
+
+### 1. Сваляне на скрипта от GitHub с токен:
+```bash
+curl -fsSL -u "NetGalaxySoft:<GITHUB_TOKEN>" \
+https://raw.githubusercontent.com/NetGalaxySoft/local-comps/main/ssh-server-key.sh \
+-o ssh-server-key.sh
+```
+
+### 2. Задаване на права за изпълнение:
+```bash
+chmod +x ssh-server-key.sh
+```
+
+### 3. Стартиране на скрипта:
 ```bash
 ./ssh-server-key.sh [опция]
 ```

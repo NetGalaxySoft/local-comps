@@ -379,38 +379,31 @@ echo ""
 echo "[9] ЗАПИС В SSH CONFIG ФАЙЛА..."
 echo "-------------------------------------------------------------------------"
 
-# Корекция за HOME при използване на sudo
-if [[ -n "$SUDO_USER" && "$HOME" == "/root" ]]; then
-  user_home=$(eval echo "~$SUDO_USER")
-else
-  user_home="$HOME"
+# Определяне на HOME и SSH config пътя
+USER_HOME=$(getent passwd "$USER" | cut -d: -f6)
+config_file="$USER_HOME/.ssh/config"
+
+# Проверка и създаване на ~/.ssh директория, ако липсва
+if [[ ! -d "$USER_HOME/.ssh" ]]; then
+  mkdir -p "$USER_HOME/.ssh"
+  chmod 700 "$USER_HOME/.ssh"
 fi
 
-config_file="$user_home/.ssh/config"
+# Проверка и създаване на config файл, ако липсва
+if [[ ! -f "$config_file" ]]; then
+  touch "$config_file"
+  chmod 600 "$config_file"
+fi
 
-# Уверяваме се, че ~/.ssh и config файла съществуват
-mkdir -p "$(dirname "$config_file")"
-touch "$config_file"
-chmod 600 "$config_file"
-
-# Проверка дали потребителят избра да презапише записа
+# Премахване на стария запис (ако съществува)
 if grep -qE "^Host $quick_connect\$" "$config_file" 2>/dev/null; then
-  if [[ "$overwrite_config" == "true" ]]; then
-    echo "🔁 Обновяване на съществуващия запис за '$quick_connect'..."
-
-    # Изтриване на стария запис
-    awk -v alias="$quick_connect" '
-      BEGIN {skip=0}
-      $1=="Host" && $2==alias {skip=1; next}
-      skip && $1=="Host" {skip=0}
-      !skip {print}
-    ' "$config_file" > "${config_file}.tmp" && mv "${config_file}.tmp" "$config_file"
-  else
-    echo "⏭️  Записът в config файла беше пропуснат по избор на оператора."
-    echo ""
-    echo ""
-    exit 0
-  fi
+  echo "ℹ️ Съществуващ запис за '$quick_connect' беше открит – ще бъде обновен."
+  awk -v alias="$quick_connect" '
+    BEGIN {skip=0}
+    $1=="Host" && $2==alias {skip=1; next}
+    skip && $1=="Host" {skip=0}
+    !skip {print}
+  ' "$config_file" > "${config_file}.tmp" && mv "${config_file}.tmp" "$config_file"
 fi
 
 # Добавяне на новия запис
@@ -428,6 +421,7 @@ chmod 600 "$config_file"
 echo "✅ Записът за '$quick_connect' беше добавен в $config_file"
 echo "📡 Вече можете да се свързвате със: ssh $quick_connect"
 echo ""
+
 echo "❓ Желаете ли да създадете друг SSH ключ?"
 echo "[y] - Стартиране на скрипта отначало"
 echo "[n] - Благодарим за използването! Скриптът ще бъде премахнат."

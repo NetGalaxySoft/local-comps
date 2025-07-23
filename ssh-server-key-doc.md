@@ -96,8 +96,6 @@ ssh myserver
 
 ---
 
----
-
 ### ℹ️ Версия:
 `ssh-server-key.sh` v1.0 (22.05.2025)
 

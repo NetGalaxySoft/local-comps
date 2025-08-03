@@ -56,15 +56,23 @@ fi
 
 NETGALAXY_DIR="/etc/netgalaxy"
 SETUP_ENV_FILE="$NETGALAXY_DIR/setup.env"
+MODULES_FILE="$NETGALAXY_DIR/todo.modules"
 
 # Създаване на директорията, ако не съществува
 if [ ! -d "$NETGALAXY_DIR" ]; then
   sudo mkdir -p "$NETGALAXY_DIR"
 fi
 
-# Създаване на файла, ако не съществува
+# Създаване на файла setup.env, ако не съществува
 if [ ! -f "$SETUP_ENV_FILE" ]; then
   sudo touch "$SETUP_ENV_FILE"
+  # Защита от изтриване (immutable)
+  sudo chattr +i "$SETUP_ENV_FILE"
+fi
+
+# Създаване на файла todo.modules, ако не съществува
+if [ ! -f "$MODULES_FILE" ]; then
+  sudo touch "$MODULES_FILE"
 fi
 
 # Проверка дали скриптът вече е изпълнен успешно
@@ -294,6 +302,13 @@ else
   echo "UNICYRL_MODULE3=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
 fi
 
+# ✅ Запис в todo.modules, че config.json съществува
+if sudo grep -q '^CONFIG_JSON=1' "$MODULES_FILE"; then
+  sudo sed -i 's|^CONFIG_JSON=.*|CONFIG_JSON=1|' "$MODULES_FILE"
+else
+  echo "CONFIG_JSON=1" | sudo tee -a "$MODULES_FILE" > /dev/null
+fi
+
 echo "✅ Модул 3 е завършен успешно."
 echo ""
 fi
@@ -313,6 +328,13 @@ if sudo grep -q '^UNICYRL_MODULE4=✅' "$SETUP_ENV_FILE"; then
   echo "ℹ️ Модул 4 вече е изпълнен успешно. Пропускане..."
   echo ""
 else
+
+# === Проверка дали config.json е наличен ===
+if ! grep -q '^CONFIG_JSON=1' "$MODULES_FILE"; then
+  echo "❌ Липсва предварително генериран config.json. Изпълнете Модул 3."
+  echo ""
+  exit 1
+fi
 
 LISTENER_SCRIPT="./build/unicyrl.py"
 
@@ -374,7 +396,7 @@ def on_key(event):
             seq = typed[-length:]
             if seq in mapping:
                 keyboard.write(mapping[seq])
-                typed = typed[:-length]  # премахване на изписаното
+                typed = typed[:-length]
                 break
 
 keyboard.hook(on_key)
@@ -384,11 +406,18 @@ EOF
 chmod +x "$LISTENER_SCRIPT"
 echo "🎧 Създаден Python файл: $LISTENER_SCRIPT"
 
-# ✅ Запис в setup.env, че модулът е успешен
+# ✅ Запис в setup.env
 if sudo grep -q '^UNICYRL_MODULE4=' "$SETUP_ENV_FILE"; then
   sudo sed -i 's|^UNICYRL_MODULE4=.*|UNICYRL_MODULE4=✅|' "$SETUP_ENV_FILE"
 else
   echo "UNICYRL_MODULE4=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+fi
+
+# ✅ Запис в todo.modules
+if sudo grep -q '^UNICYRL_SCRIPT=' "$MODULES_FILE"; then
+  sudo sed -i 's|^UNICYRL_SCRIPT=.*|UNICYRL_SCRIPT=1|' "$MODULES_FILE"
+else
+  echo "UNICYRL_SCRIPT=1" | sudo tee -a "$MODULES_FILE" > /dev/null
 fi
 
 echo "✅ Модул 4 е завършен успешно."
@@ -396,6 +425,7 @@ echo ""
 fi
 echo ""
 echo ""
+
 
 # =====================================================================
 # [МОДУЛ 5] СЪЗДАВАНЕ НА currency_select.py
@@ -643,17 +673,29 @@ echo "-----------------------------------------------------------"
 echo ""
 
 read -rp "Вашият отговор (y/n): " confirm
-confirm=${confirm,,}  # преобразуване в малки букви
+confirm=${confirm,,}  # Преобразуване в малки букви
 
 if [[ "$confirm" == "y" ]]; then
+  # ✅ Обновяване на setup.env
   if sudo grep -q '^UNICYRL_SCRIPT=' "$SETUP_ENV_FILE"; then
     sudo sed -i 's|^UNICYRL_SCRIPT=.*|UNICYRL_SCRIPT=✅|' "$SETUP_ENV_FILE"
   else
     echo "UNICYRL_SCRIPT=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
   fi
+
+  # 🧹 Изтриване на todo.modules
+  if [ -f "$MODULES_FILE" ]; then
+    sudo rm -f "$MODULES_FILE"
+    echo "🗑️  Изтрит файл: $MODULES_FILE"
+  fi
+
+  # 🧨 Самоизтриване на скрипта
   echo ""
   echo "🎉 Скриптът е отбелязан като ЗАВЪРШЕН в setup.env"
+  echo "🧨 Изтриване на текущия скрипт: $0"
   echo ""
+  rm -- "$0"
+
 elif [[ "$confirm" == "n" ]]; then
   echo ""
   echo "⚠️ Скриптът не е отбелязан като завършен. Можете да го доработите и стартирате отново."

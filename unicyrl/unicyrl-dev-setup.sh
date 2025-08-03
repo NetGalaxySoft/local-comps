@@ -98,22 +98,24 @@ echo ""
 if sudo grep -q '^UNICYRL_MODULE1=✅' "$SETUP_ENV_FILE"; then
   echo "ℹ️ Модул 1 вече е изпълнен успешно. Пропускане..."
   echo ""
-else
+  return 0 2>/dev/null || exit 0
+fi
 
+# === Проверка за зависимости ===
 REQUIRED_CMDS=("bash" "python3" "jq")
 
 for cmd in "${REQUIRED_CMDS[@]}"; do
-  if ! command -v jq >/dev/null 2>&1; then
-  echo "🔧 Липсва jq – опит за автоматична инсталация..."
-  if sudo apt update && sudo apt install -y jq; then
-    echo "✅ Успешно инсталиран jq."
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "🔧 Липсва $cmd – опит за автоматична инсталация..."
+    if sudo apt update && sudo apt install -y "$cmd"; then
+      echo "✅ Успешно инсталиран $cmd."
+    else
+      echo "❌ Неуспешна автоматична инсталация на $cmd. Прекратяване."
+      exit 1
+    fi
   else
-    echo "❌ Неуспешна автоматична инсталация на jq. Прекратяване."
-    exit 1
+    echo "✅ $cmd вече е наличен."
   fi
-else
-  echo "✅ jq вече е наличен."
-fi
 done
 
 echo "✅ Всички зависимости са налични."
@@ -152,18 +154,23 @@ $,USD,Щатски долар
 EOF
 echo "💱 Създаден файл: build/currencies.csv"
 
-# ✅ Запис в setup.env, че модулът е успешен
-if sudo grep -q '^UNICYRL_MODULE1=' "$SETUP_ENV_FILE"; then
+# === Защита на setup.env и записване на резултата ===
+if sudo grep -q '^UNICYRL_MODULE1=' "$SETUP_ENV_FILE" 2>/dev/null; then
   unlock_setup_env
   sudo sed -i 's|^UNICYRL_MODULE1=.*|UNICYRL_MODULE1=✅|' "$SETUP_ENV_FILE"
   lock_setup_env
 else
+  unlock_setup_env
   echo "UNICYRL_MODULE1=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+  if [ $? -ne 0 ]; then
+    echo "❌ Грешка при запис в $SETUP_ENV_FILE. Прекратяване."
+    exit 1
+  fi
+  lock_setup_env
 fi
 
 echo ""
 echo "✅ Модул 1 е завършен успешно."
-fi
 echo ""
 echo ""
 

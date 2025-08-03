@@ -244,7 +244,7 @@ EOF
       exit 1
     fi
   else
-    if ! sudo sh -c "echo 'UNICYRL_MODULE2=✅' >> '$SETUP_ENV_FILE'"; then
+    if ! sudo sh -c "echo 'UNICYRL_MODULE2=✅' >> \"$SETUP_ENV_FILE\""; then
       echo "❌ Грешка при добавяне в $SETUP_ENV_FILE"
       exit 1
     fi

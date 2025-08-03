@@ -623,7 +623,7 @@ echo "-----------------------------------------------------------"
 echo ""
 
 # === Проверка дали модулът вече е изпълнен успешно ===
-if sudo grep -q '^UNICYRL_MODULE6=✅' "$SETUP_ENV_FILE"; then
+if sudo grep -q '^UNICYRL_MODULE6=✅' "$SETUP_ENV_FILE" 2>/dev/null; then
   echo "ℹ️ Модул 6 вече е изпълнен успешно. Пропускане..."
   echo ""
 else

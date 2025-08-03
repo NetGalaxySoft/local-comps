@@ -237,18 +237,26 @@ EOF
 
   echo "📄 Файлът map-101.json е създаден успешно в: $MAP_FILE"
 
-  # ✅ Запис в setup.env
-  if sudo grep -q '^UNICYRL_MODULE2=' "$SETUP_ENV_FILE"; then
-    if ! sudo sed -i 's|^UNICYRL_MODULE2=.*|UNICYRL_MODULE2=✅|' "$SETUP_ENV_FILE"; then
-      echo "❌ Грешка при запис в $SETUP_ENV_FILE"
-      exit 1
-    fi
-  else
-    if ! sudo sh -c "echo 'UNICYRL_MODULE2=✅' >> \"$SETUP_ENV_FILE\""; then
-      echo "❌ Грешка при добавяне в $SETUP_ENV_FILE"
-      exit 1
-    fi
+# ✅ Запис в setup.env
+if sudo grep -q '^UNICYRL_MODULE2=' "$SETUP_ENV_FILE" 2>/dev/null; then
+  unlock_setup_env
+  if ! sudo sed -i 's|^UNICYRL_MODULE2=.*|UNICYRL_MODULE2=✅|' "$SETUP_ENV_FILE"; then
+    echo "❌ Грешка при запис в $SETUP_ENV_FILE"
+    lock_setup_env
+    exit 1
   fi
+  lock_setup_env
+else
+  unlock_setup_env
+  echo "UNICYRL_MODULE2=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+  if [ $? -ne 0 ]; then
+    echo "❌ Грешка при добавяне в $SETUP_ENV_FILE"
+    lock_setup_env
+    exit 1
+  fi
+  lock_setup_env
+fi
+
 
   # ✅ Запис в todo.modules
   if sudo grep -q '^MAP_FILE=' "$MODULES_FILE"; then

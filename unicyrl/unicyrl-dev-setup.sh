@@ -98,8 +98,7 @@ echo ""
 if sudo grep -q '^UNICYRL_MODULE1=✅' "$SETUP_ENV_FILE"; then
   echo "ℹ️ Модул 1 вече е изпълнен успешно. Пропускане..."
   echo ""
-  return 0 2>/dev/null || exit 0
-fi
+else
 
 # === Проверка за зависимости ===
 REQUIRED_CMDS=("bash" "python3" "jq")
@@ -171,6 +170,8 @@ fi
 
 echo ""
 echo "✅ Модул 1 е завършен успешно."
+
+fi
 echo ""
 echo ""
 

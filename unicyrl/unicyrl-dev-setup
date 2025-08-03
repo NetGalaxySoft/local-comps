@@ -33,7 +33,6 @@ show_help() {
   echo "Забележка: Скриптът е самодостатъчен и изпълнява всички модули последователно."
   echo ""
 }
-
 # === ОБРАБОТКА НА ОПЦИИ ====================================================
 if [[ $# -gt 0 ]]; then
   case "$1" in
@@ -53,12 +52,39 @@ if [[ $# -gt 0 ]]; then
   esac
 fi
 
+# === ПРОВЕРКА ЗА ПРЕДХОДНО ИЗПЪЛНЕНИЕ НА СКРИПТА ========================
+
+NETGALAXY_DIR="/etc/netgalaxy"
+SETUP_ENV_FILE="$NETGALAXY_DIR/setup.env"
+
+# Създаване на директорията, ако не съществува
+if [ ! -d "$NETGALAXY_DIR" ]; then
+  sudo mkdir -p "$NETGALAXY_DIR"
+fi
+
+# Създаване на файла, ако не съществува
+if [ ! -f "$SETUP_ENV_FILE" ]; then
+  sudo touch "$SETUP_ENV_FILE"
+fi
+
+# Проверка дали скриптът вече е изпълнен успешно
+if grep -q '^UNICYRL_SCRIPT=✅' "$SETUP_ENV_FILE"; then
+  echo "✅ Скриптът вече е изпълнен успешно. Прекратяване..."
+  exit 0
+fi
+
 # =====================================================================
 # [МОДУЛ 1] ПРЕДВАРИТЕЛНИ ПРОВЕРКИ И НАСТРОЙКА НА РАБОТНА СРЕДА
 # =====================================================================
 echo "[1] ПРЕДВАРИТЕЛНИ ПРОВЕРКИ И НАСТРОЙКА НА РАБОТНА СРЕДА..."
 echo "-----------------------------------------------------------"
 echo ""
+
+# === Проверка дали модулът вече е изпълнен успешно ===
+if sudo grep -q '^UNICYRL_MODULE1=✅' "$SETUP_ENV_FILE"; then
+  echo "ℹ️ Модул 1 вече е изпълнен успешно. Пропускане..."
+  echo ""
+else
 
 REQUIRED_CMDS=("bash" "python3" "jq")
 
@@ -106,9 +132,19 @@ $,USD,Щатски долар
 EOF
 echo "💱 Създаден файл: build/currencies.csv"
 
+# ✅ Запис в setup.env, че модулът е успешен
+if sudo grep -q '^UNICYRL_MODULE1=' "$SETUP_ENV_FILE"; then
+  sudo sed -i 's|^UNICYRL_MODULE1=.*|UNICYRL_MODULE1=✅|' "$SETUP_ENV_FILE"
+else
+  echo "UNICYRL_MODULE1=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+fi
+
 echo ""
 echo "✅ Модул 1 е завършен успешно."
+fi
 echo ""
+echo ""
+
 
 # =====================================================================
 # [МОДУЛ 2] СЪЗДАВАНЕ НА map-101.json
@@ -116,6 +152,12 @@ echo ""
 echo "[2] СЪЗДАВАНЕ НА map-101.json..."
 echo "-----------------------------------------------------------"
 echo ""
+
+# === Проверка дали модулът вече е изпълнен успешно ===
+if sudo grep -q '^UNICYRL_MODULE2=✅' "$SETUP_ENV_FILE"; then
+  echo "ℹ️ Модул 2 вече е изпълнен успешно. Пропускане..."
+  echo ""
+else
 
 MAP_FILE="./build/map-101.json"
 
@@ -164,6 +206,18 @@ cat > "$MAP_FILE" <<EOF
 EOF
 
 echo "📄 Файлът map-101.json е създаден успешно в: $MAP_FILE"
+
+# ✅ Запис в setup.env, че модулът е успешен
+if sudo grep -q '^UNICYRL_MODULE2=' "$SETUP_ENV_FILE"; then
+  sudo sed -i 's|^UNICYRL_MODULE2=.*|UNICYRL_MODULE2=✅|' "$SETUP_ENV_FILE"
+else
+  echo "UNICYRL_MODULE2=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+fi
+
+echo ""
+echo "✅ Модул 2 е завършен успешно."
+fi
+echo ""
 echo ""
 
 
@@ -173,6 +227,12 @@ echo ""
 echo "[3] СЪЗДАВАНЕ НА config_handler.py..."
 echo "-----------------------------------------------------------"
 echo ""
+
+# === Проверка дали модулът вече е изпълнен успешно ===
+if sudo grep -q '^UNICYRL_MODULE3=✅' "$SETUP_ENV_FILE"; then
+  echo "ℹ️ Модул 3 вече е изпълнен успешно. Пропускане..."
+  echo ""
+else
 
 CONFIG_SCRIPT="./build/config_handler.py"
 
@@ -226,6 +286,18 @@ EOF
 
 chmod +x "$CONFIG_SCRIPT"
 echo "🐍 Създаден Python файл: $CONFIG_SCRIPT"
+
+# ✅ Запис в setup.env, че модулът е успешен
+if sudo grep -q '^UNICYRL_MODULE3=' "$SETUP_ENV_FILE"; then
+  sudo sed -i 's|^UNICYRL_MODULE3=.*|UNICYRL_MODULE3=✅|' "$SETUP_ENV_FILE"
+else
+  echo "UNICYRL_MODULE3=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+fi
+
+echo "✅ Модул 3 е завършен успешно."
+echo ""
+fi
+echo ""
 echo ""
 
 
@@ -235,6 +307,12 @@ echo ""
 echo "[4] СЪЗДАВАНЕ НА unicyrl.py..."
 echo "-----------------------------------------------------------"
 echo ""
+
+# === Проверка дали модулът вече е изпълнен успешно ===
+if sudo grep -q '^UNICYRL_MODULE4=✅' "$SETUP_ENV_FILE"; then
+  echo "ℹ️ Модул 4 вече е изпълнен успешно. Пропускане..."
+  echo ""
+else
 
 LISTENER_SCRIPT="./build/unicyrl.py"
 
@@ -305,8 +383,19 @@ EOF
 
 chmod +x "$LISTENER_SCRIPT"
 echo "🎧 Създаден Python файл: $LISTENER_SCRIPT"
-echo ""
 
+# ✅ Запис в setup.env, че модулът е успешен
+if sudo grep -q '^UNICYRL_MODULE4=' "$SETUP_ENV_FILE"; then
+  sudo sed -i 's|^UNICYRL_MODULE4=.*|UNICYRL_MODULE4=✅|' "$SETUP_ENV_FILE"
+else
+  echo "UNICYRL_MODULE4=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+fi
+
+echo "✅ Модул 4 е завършен успешно."
+echo ""
+fi
+echo ""
+echo ""
 
 # =====================================================================
 # [МОДУЛ 5] СЪЗДАВАНЕ НА currency_select.py
@@ -314,6 +403,12 @@ echo ""
 echo "[5] СЪЗДАВАНЕ НА currency_select.py..."
 echo "-----------------------------------------------------------"
 echo ""
+
+# === Проверка дали модулът вече е изпълнен успешно ===
+if sudo grep -q '^UNICYRL_MODULE5=✅' "$SETUP_ENV_FILE"; then
+  echo "ℹ️ Модул 5 вече е изпълнен успешно. Пропускане..."
+  echo ""
+else
 
 SELECT_SCRIPT="./build/currency_select.py"
 
@@ -379,7 +474,7 @@ def main():
         if symbol in config["recent_currencies"]:
             config["recent_currencies"].remove(symbol)
         config["recent_currencies"].insert(0, symbol)
-        config["recent_currencies"] = config["recent_currencies"][:5]  # до 5 записа
+        config["recent_currencies"] = config["recent_currencies"][:5]
         save_config(config)
         print(f"✅ Запазена валута: {symbol}")
 
@@ -389,6 +484,18 @@ EOF
 
 chmod +x "$SELECT_SCRIPT"
 echo "💱 Създаден Python файл: $SELECT_SCRIPT"
+
+# ✅ Запис в setup.env, че модулът е успешен
+if sudo grep -q '^UNICYRL_MODULE5=' "$SETUP_ENV_FILE"; then
+  sudo sed -i 's|^UNICYRL_MODULE5=.*|UNICYRL_MODULE5=✅|' "$SETUP_ENV_FILE"
+else
+  echo "UNICYRL_MODULE5=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+fi
+
+echo "✅ Модул 5 е завършен успешно."
+echo ""
+fi
+echo ""
 echo ""
 
 
@@ -398,6 +505,12 @@ echo ""
 echo "[6] НАСТРОЙКА ЗА АВТОМАТИЧНО СТАРТИРАНЕ..."
 echo "-----------------------------------------------------------"
 echo ""
+
+# === Проверка дали модулът вече е изпълнен успешно ===
+if sudo grep -q '^UNICYRL_MODULE6=✅' "$SETUP_ENV_FILE"; then
+  echo "ℹ️ Модул 6 вече е изпълнен успешно. Пропускане..."
+  echo ""
+else
 
 AUTOSTART_DIR="$HOME/.config/autostart"
 AUTOSTART_FILE="$AUTOSTART_DIR/unicyrl.desktop"
@@ -430,10 +543,19 @@ echo "🖥️ Създаден autostart файл: $AUTOSTART_FILE"
 echo ""
 echo "🔧 Проверка за нужните Python зависимости..."
 pip3 install --user keyboard >/dev/null 2>&1 && echo "✅ keyboard инсталиран" || echo "⚠️ Неуспех при инсталация на keyboard"
-# zenity се предполага инсталиран (чрез apt)
+
+# ✅ Запис в setup.env, че модулът е успешен
+if sudo grep -q '^UNICYRL_MODULE6=' "$SETUP_ENV_FILE"; then
+  sudo sed -i 's|^UNICYRL_MODULE6=.*|UNICYRL_MODULE6=✅|' "$SETUP_ENV_FILE"
+else
+  echo "UNICYRL_MODULE6=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+fi
 
 echo ""
 echo "✅ Модул 6 е завършен успешно."
+echo ""
+fi
+echo ""
 echo ""
 
 
@@ -443,6 +565,12 @@ echo ""
 echo "[7] СЪЗДАВАНЕ НА АРХИВИ С ПРОЕКТА..."
 echo "-----------------------------------------------------------"
 echo ""
+
+# === Проверка дали модулът вече е изпълнен успешно ===
+if sudo grep -q '^UNICYRL_MODULE7=✅' "$SETUP_ENV_FILE"; then
+  echo "ℹ️ Модул 7 вече е изпълнен успешно. Пропускане..."
+  echo ""
+else
 
 ARCHIVE_DIR="$HOME/UniCyrl-archives"
 BUILD_DIR="$HOME/UniCyrl"
@@ -461,17 +589,26 @@ fi
 # 3. Архивиране като ZIP
 ZIP_NAME="unicyrl-$DATE_TAG.zip"
 cd "$BUILD_DIR"
-zip -r "$ARCHIVE_DIR/$ZIP_NAME" . -x "*.git*" "*__pycache__*" "*.DS_Store*"
+zip -r "$ARCHIVE_DIR/$ZIP_NAME" . -x "*.git*" "*__pycache__*" "*.DS_Store*" > /dev/null
 echo "📦 ZIP архив създаден: $ARCHIVE_DIR/$ZIP_NAME"
 
 # 4. Архивиране като TAR.GZ
-cd "$BUILD_DIR"
 TAR_NAME="unicyrl-$DATE_TAG.tar.gz"
-tar --exclude-vcs --exclude='__pycache__' --exclude='.DS_Store' -czf "$ARCHIVE_DIR/$TAR_NAME" .
+tar --exclude-vcs --exclude='__pycache__' --exclude='.DS_Store' -czf "$ARCHIVE_DIR/$TAR_NAME" . > /dev/null
 echo "📦 TAR.GZ архив създаден: $ARCHIVE_DIR/$TAR_NAME"
+
+# ✅ Запис в setup.env, че модулът е успешен
+if sudo grep -q '^UNICYRL_MODULE7=' "$SETUP_ENV_FILE"; then
+  sudo sed -i 's|^UNICYRL_MODULE7=.*|UNICYRL_MODULE7=✅|' "$SETUP_ENV_FILE"
+else
+  echo "UNICYRL_MODULE7=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+fi
 
 echo ""
 echo "✅ Модул 7 е завършен успешно."
+echo ""
+fi
+echo ""
 echo ""
 
 
@@ -499,6 +636,33 @@ echo "ℹ️ За да направите промени по картата н�
 echo "    \$HOME/UniCyrl/mapping/unicyrl-map.json"
 
 echo ""
-echo "✅ Скриптът `unicyrl-dev-setup.sh` завърши успешно!"
+echo "-----------------------------------------------------------"
+echo "❓ Приемате ли работата по скрипта за ЗАВЪРШЕНА?"
+echo "   Въведете [y] за ДА или [n] за НЕ"
 echo "-----------------------------------------------------------"
 echo ""
+
+read -rp "Вашият отговор (y/n): " confirm
+confirm=${confirm,,}  # преобразуване в малки букви
+
+if [[ "$confirm" == "y" ]]; then
+  if sudo grep -q '^UNICYRL_SCRIPT=' "$SETUP_ENV_FILE"; then
+    sudo sed -i 's|^UNICYRL_SCRIPT=.*|UNICYRL_SCRIPT=✅|' "$SETUP_ENV_FILE"
+  else
+    echo "UNICYRL_SCRIPT=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+  fi
+  echo ""
+  echo "🎉 Скриптът е отбелязан като ЗАВЪРШЕН в setup.env"
+  echo ""
+elif [[ "$confirm" == "n" ]]; then
+  echo ""
+  echo "⚠️ Скриптът не е отбелязан като завършен. Можете да го доработите и стартирате отново."
+  echo ""
+else
+  echo ""
+  echo "❌ Невалиден отговор. Моля, стартирайте отново този модул ръчно."
+  echo ""
+fi
+
+#----------- Край на скрипта -----------
+

@@ -719,20 +719,26 @@ DATE_TAG=$(date +%Y%m%d-%H%M)
 # 1. Създаване на директория за архиви
 mkdir -p "$ARCHIVE_DIR"
 
-# 2. Проверка дали build директорията съществува
+# 2. Проверка и създаване на build директория
 if [[ ! -d "$BUILD_DIR" ]]; then
-  echo "❌ Липсва директорията $BUILD_DIR – не може да се създаде архив!"
+  echo "⚠️ Липсва директорията $BUILD_DIR – създаване..."
+  mkdir -p "$BUILD_DIR"
+fi
+
+# 3. Проверка дали има съдържание за архивиране
+if [[ -z "$(ls -A "$BUILD_DIR")" ]]; then
+  echo "❌ Няма файлове за архивиране в $BUILD_DIR – прекратяване."
   echo ""
   exit 1
 fi
 
-# 3. Архивиране като ZIP
+# 4. Архивиране като ZIP
 ZIP_NAME="unicyrl-$DATE_TAG.zip"
 cd "$BUILD_DIR"
 zip -r "$ARCHIVE_DIR/$ZIP_NAME" . -x "*.git*" "*__pycache__*" "*.DS_Store*" > /dev/null
 echo "📦 ZIP архив създаден: $ARCHIVE_DIR/$ZIP_NAME"
 
-# 4. Архивиране като TAR.GZ
+# 5. Архивиране като TAR.GZ
 TAR_NAME="unicyrl-$DATE_TAG.tar.gz"
 tar --exclude-vcs --exclude='__pycache__' --exclude='.DS_Store' -czf "$ARCHIVE_DIR/$TAR_NAME" . > /dev/null
 echo "📦 TAR.GZ архив създаден: $ARCHIVE_DIR/$TAR_NAME"

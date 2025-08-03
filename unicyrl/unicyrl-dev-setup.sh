@@ -615,7 +615,6 @@ echo ""
 echo ""
 
 
-exit 0
 # =====================================================================
 # [МОДУЛ 6] АВТОМАТИЧНО СТАРТИРАНЕ НА UniCyrl
 # =====================================================================
@@ -662,10 +661,19 @@ echo "🔧 Проверка за нужните Python зависимости...
 pip3 install --user keyboard >/dev/null 2>&1 && echo "✅ keyboard инсталиран" || echo "⚠️ Неуспех при инсталация на keyboard"
 
 # ✅ Запис в setup.env, че модулът е успешен
-if sudo grep -q '^UNICYRL_MODULE6=' "$SETUP_ENV_FILE"; then
+if sudo grep -q '^UNICYRL_MODULE6=' "$SETUP_ENV_FILE" 2>/dev/null; then
+  unlock_setup_env
   sudo sed -i 's|^UNICYRL_MODULE6=.*|UNICYRL_MODULE6=✅|' "$SETUP_ENV_FILE"
+  lock_setup_env
 else
+  unlock_setup_env
   echo "UNICYRL_MODULE6=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+  if [ $? -ne 0 ]; then
+    echo "❌ Грешка при запис в $SETUP_ENV_FILE"
+    lock_setup_env
+    exit 1
+  fi
+  lock_setup_env
 fi
 
 echo ""

@@ -279,7 +279,6 @@ echo ""
 echo ""
 
 
-exit 0
 # =====================================================================
 # [МОДУЛ 3] СЪЗДАВАНЕ НА ЛОГИКА ЗА ЧЕТЕНЕ/ЗАПИС НА config.json
 # =====================================================================
@@ -346,11 +345,24 @@ EOF
 chmod +x "$CONFIG_SCRIPT"
 echo "🐍 Създаден Python файл: $CONFIG_SCRIPT"
 
-# ✅ Запис в setup.env, че модулът е успешен
-if sudo grep -q '^UNICYRL_MODULE3=' "$SETUP_ENV_FILE"; then
-  sudo sed -i 's|^UNICYRL_MODULE3=.*|UNICYRL_MODULE3=✅|' "$SETUP_ENV_FILE"
+# ✅ Запис в setup.env
+if sudo grep -q '^UNICYRL_MODULE3=' "$SETUP_ENV_FILE" 2>/dev/null; then
+  unlock_setup_env
+  if ! sudo sed -i 's|^UNICYRL_MODULE3=.*|UNICYRL_MODULE3=✅|' "$SETUP_ENV_FILE"; then
+    echo "❌ Грешка при запис в $SETUP_ENV_FILE"
+    lock_setup_env
+    exit 1
+  fi
+  lock_setup_env
 else
+  unlock_setup_env
   echo "UNICYRL_MODULE3=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+  if [ $? -ne 0 ]; then
+    echo "❌ Грешка при добавяне в $SETUP_ENV_FILE"
+    lock_setup_env
+    exit 1
+  fi
+  lock_setup_env
 fi
 
 # ✅ Запис в todo.modules, че config.json съществува

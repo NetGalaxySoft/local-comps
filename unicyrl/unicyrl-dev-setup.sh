@@ -189,9 +189,9 @@ if sudo grep -q '^UNICYRL_MODULE2=✅' "$SETUP_ENV_FILE"; then
   echo ""
 else
 
-MAP_FILE="./build/map-101.json"
+  MAP_FILE="./build/map-101.json"
 
-cat > "$MAP_FILE" <<EOF
+  cat > "$MAP_FILE" <<EOF
 {
   "a": "а",
   "b": "б",
@@ -235,24 +235,37 @@ cat > "$MAP_FILE" <<EOF
 }
 EOF
 
-echo "📄 Файлът map-101.json е създаден успешно в: $MAP_FILE"
+  echo "📄 Файлът map-101.json е създаден успешно в: $MAP_FILE"
 
-# ✅ Запис в setup.env, че модулът е успешен
-if sudo grep -q '^UNICYRL_MODULE2=' "$SETUP_ENV_FILE"; then
-  sudo sed -i 's|^UNICYRL_MODULE2=.*|UNICYRL_MODULE2=✅|' "$SETUP_ENV_FILE"
-else
-  echo "UNICYRL_MODULE2=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
-fi
+  # ✅ Запис в setup.env
+  if sudo grep -q '^UNICYRL_MODULE2=' "$SETUP_ENV_FILE"; then
+    if ! sudo sed -i 's|^UNICYRL_MODULE2=.*|UNICYRL_MODULE2=✅|' "$SETUP_ENV_FILE"; then
+      echo "❌ Грешка при запис в $SETUP_ENV_FILE"
+      exit 1
+    fi
+  else
+    if ! echo "UNICYRL_MODULE2=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null; then
+      echo "❌ Грешка при добавяне в $SETUP_ENV_FILE"
+      exit 1
+    fi
+  fi
 
-# ✅ Запис в todo.modules (път до карта)
-if sudo grep -q '^MAP_FILE=' "$MODULES_FILE"; then
-  sudo sed -i "s|^MAP_FILE=.*|MAP_FILE=$MAP_FILE|" "$MODULES_FILE"
-else
-  echo "MAP_FILE=$MAP_FILE" | sudo tee -a "$MODULES_FILE" > /dev/null
-fi
+  # ✅ Запис в todo.modules
+  if sudo grep -q '^MAP_FILE=' "$MODULES_FILE"; then
+    if ! sudo sed -i "s|^MAP_FILE=.*|MAP_FILE=$MAP_FILE|" "$MODULES_FILE"; then
+      echo "❌ Грешка при актуализация на MAP_FILE в $MODULES_FILE"
+      exit 1
+    fi
+  else
+    if ! echo "MAP_FILE=$MAP_FILE" | sudo tee -a "$MODULES_FILE" > /dev/null; then
+      echo "❌ Грешка при добавяне на MAP_FILE в $MODULES_FILE"
+      exit 1
+    fi
+  fi
 
-echo ""
-echo "✅ Модул 2 е завършен успешно."
+  echo ""
+  echo "✅ Модул 2 е завършен успешно."
+
 fi
 echo ""
 echo ""

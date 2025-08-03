@@ -504,7 +504,6 @@ echo ""
 echo ""
 
 
-exit 0
 # =====================================================================
 # [МОДУЛ 5] СЪЗДАВАНЕ НА currency_select.py
 # =====================================================================
@@ -594,10 +593,19 @@ chmod +x "$SELECT_SCRIPT"
 echo "💱 Създаден Python файл: $SELECT_SCRIPT"
 
 # ✅ Запис в setup.env, че модулът е успешен
-if sudo grep -q '^UNICYRL_MODULE5=' "$SETUP_ENV_FILE"; then
+if sudo grep -q '^UNICYRL_MODULE5=' "$SETUP_ENV_FILE" 2>/dev/null; then
+  unlock_setup_env
   sudo sed -i 's|^UNICYRL_MODULE5=.*|UNICYRL_MODULE5=✅|' "$SETUP_ENV_FILE"
+  lock_setup_env
 else
+  unlock_setup_env
   echo "UNICYRL_MODULE5=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+  if [ $? -ne 0 ]; then
+    echo "❌ Грешка при запис в $SETUP_ENV_FILE"
+    lock_setup_env
+    exit 1
+  fi
+  lock_setup_env
 fi
 
 echo "✅ Модул 5 е завършен успешно."

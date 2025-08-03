@@ -244,7 +244,7 @@ EOF
       exit 1
     fi
   else
-    if ! echo "UNICYRL_MODULE2=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null; then
+    if ! sudo sh -c "echo 'UNICYRL_MODULE2=✅' >> '$SETUP_ENV_FILE'"; then
       echo "❌ Грешка при добавяне в $SETUP_ENV_FILE"
       exit 1
     fi
@@ -257,7 +257,7 @@ EOF
       exit 1
     fi
   else
-    if ! echo "MAP_FILE=$MAP_FILE" | sudo tee -a "$MODULES_FILE" > /dev/null; then
+    if ! sudo sh -c "echo 'MAP_FILE=$MAP_FILE' >> '$MODULES_FILE'"; then
       echo "❌ Грешка при добавяне на MAP_FILE в $MODULES_FILE"
       exit 1
     fi

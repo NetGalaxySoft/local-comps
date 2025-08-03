@@ -699,7 +699,6 @@ echo ""
 echo ""
 
 
-exit 0
 # =====================================================================
 # [МОДУЛ 7] ПАКЕТИРАНЕ НА UniCyrl
 # =====================================================================
@@ -739,10 +738,19 @@ tar --exclude-vcs --exclude='__pycache__' --exclude='.DS_Store' -czf "$ARCHIVE_D
 echo "📦 TAR.GZ архив създаден: $ARCHIVE_DIR/$TAR_NAME"
 
 # ✅ Запис в setup.env, че модулът е успешен
-if sudo grep -q '^UNICYRL_MODULE7=' "$SETUP_ENV_FILE"; then
+if sudo grep -q '^UNICYRL_MODULE7=' "$SETUP_ENV_FILE" 2>/dev/null; then
+  unlock_setup_env
   sudo sed -i 's|^UNICYRL_MODULE7=.*|UNICYRL_MODULE7=✅|' "$SETUP_ENV_FILE"
+  lock_setup_env
 else
+  unlock_setup_env
   echo "UNICYRL_MODULE7=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+  if [ $? -ne 0 ]; then
+    echo "❌ Грешка при запис в $SETUP_ENV_FILE"
+    lock_setup_env
+    exit 1
+  fi
+  lock_setup_env
 fi
 
 echo ""
@@ -789,11 +797,20 @@ confirm=${confirm,,}  # Преобразуване в малки букви
 
 if [[ "$confirm" == "y" ]]; then
   # ✅ Обновяване на setup.env
-  if sudo grep -q '^UNICYRL_SCRIPT=' "$SETUP_ENV_FILE"; then
-    sudo sed -i 's|^UNICYRL_SCRIPT=.*|UNICYRL_SCRIPT=✅|' "$SETUP_ENV_FILE"
-  else
-    echo "UNICYRL_SCRIPT=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+if sudo grep -q '^UNICYRL_SCRIPT=' "$SETUP_ENV_FILE" 2>/dev/null; then
+  unlock_setup_env
+  sudo sed -i 's|^UNICYRL_SCRIPT=.*|UNICYRL_SCRIPT=✅|' "$SETUP_ENV_FILE"
+  lock_setup_env
+else
+  unlock_setup_env
+  echo "UNICYRL_SCRIPT=✅" | sudo tee -a "$SETUP_ENV_FILE" > /dev/null
+  if [ $? -ne 0 ]; then
+    echo "❌ Грешка при запис в $SETUP_ENV_FILE"
+    lock_setup_env
+    exit 1
   fi
+  lock_setup_env
+fi
 
   # 🧹 Изтриване на todo.modules
   if [ -f "$MODULES_FILE" ]; then

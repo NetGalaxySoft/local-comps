@@ -322,9 +322,89 @@ echo ""
 echo "[8] КАЧВАНЕ НА ПУБЛИЧНИЯ КЛЮЧ НА СЪРВЪРА..."
 echo "-------------------------------------------------------------------------"
 
-read -rp "Въведете потребителско име за $host_ip: " ssh_user
-read -rp "Въведете SSH порт за връзка (натиснете Enter за 22): " ssh_port
-ssh_port="${ssh_port:-22}"  # ако няма въведен порт, използваме 22
+while true; do
+    read -rp "Въведете потребителско име за $host_ip (до 15 символа, само букви, цифри, _ и -): " ssh_user
+    # Проверка за празен вход
+    if [ -z "$ssh_user" ]; then
+        echo "Грешка: Потребителското име не може да бъде празно."
+        continue
+    fi
+    # Проверка за дължина (макс. 15 символа)
+    if [ ${#ssh_user} -gt 15 ]; then
+        echo "Грешка: Потребителското име не може да надвишава 15 символа."
+        continue
+    fi
+    # Проверка за разрешени символи (само a-z, A-Z, 0-9, _, -)
+    if ! [[ "$ssh_user" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        echo "Грешка: Неразрешени символи. Разрешени са само букви, цифри, долна черта (_) и тире (-)."
+        continue
+    fi
+    # Проверка дали започва с буква (препоръчително за потребителски имена)
+    if ! [[ "$ssh_user" =~ ^[a-zA-Z] ]]; then
+        echo "Грешка: Потребителското име трябва да започва с буква."
+        continue
+    fi
+    # Ако всичко е ОК – излез от цикъла
+    break
+done
+
+while true; do
+    read -rp "Въведете SSH порт за връзка (натиснето Enter за 22): " ssh_port_input
+    ssh_port="${ssh_port_input:-22}"  # По подразбиране: 22
+
+    # Проверка дали е число
+    if ! [[ "$ssh_port" =~ ^[0-9]+$ ]]; then
+        echo "Грешка: Портът трябва да бъде число."
+        continue
+    fi
+
+    # Проверка за диапазона 1–65535
+    if [ "$ssh_port" -lt 1 ] || [ "$ssh_port" -gt 65535 ]; then
+        echo "Грешка: Портът трябва да бъде между 1 и 65535."
+        continue
+    fi
+
+    # Списък на забранените портове (често използвани от други услуги)
+    blocked_ports="25 53 80 110 143 443 587 993 995 1194 3000 3306 5432 8080 8443"
+
+    if echo "$blocked_ports" | grep -wq "$ssh_port"; then
+        service=""
+        case "$ssh_port" in
+            25)  service="SMTP (email)" ;;
+            53)  service="DNS" ;;
+            80)  service="HTTP (уебсайт)" ;;
+            110) service="POP3 (имейл)" ;;
+            143) service="IMAP (имейл)" ;;
+            443) service="HTTPS (уебсайт)" ;;
+            587) service="SMTP (email, TLS)" ;;
+            993) service="IMAP over SSL" ;;
+            995) service="POP3 over SSL" ;;
+            1194) service="OpenVPN" ;;
+            3000) service="Node.js / Grafana" ;;
+            3306) service="MySQL" ;;
+            5432) service="PostgreSQL" ;;
+            8080) service="HTTP (алтернативен)" ;;
+            8443) service="HTTPS (алтернативен)" ;;
+        esac
+        echo "Грешка: Порт $ssh_port се използва за $service и не е подходящ за SSH."
+        echo "Използвайте порт между 1025 и 65535, например 2222, 22000 или 55222."
+        continue
+    fi
+
+    # Предупреждение за ниски портове (изискват root)
+    if [ "$ssh_port" -lt 1024 ] && [ "$ssh_port" -ne 22 ]; then
+        echo "Внимание: Порт под 1024 изисква root права. Препоръчва се порт над 1024."
+        read -rp "Наистина ли искате да използвате порт $ssh_port? (y/n): " confirm
+        if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+            continue
+        fi
+    fi
+
+    # Ако всичко е ОК
+    break
+done
+
+echo "Ще се използва SSH порт: $ssh_port"
 
 # Проверка за наличие на необходимите файлове
 if [[ ! -f "$key_path" || ! -f "$key_path.pub" ]]; then

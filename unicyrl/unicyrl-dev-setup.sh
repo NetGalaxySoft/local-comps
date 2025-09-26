@@ -76,9 +76,10 @@ default  partial alphanumeric_keys
 xkb_symbols "phonetic" {
     // Базирано на стандартната българска фонетична
     include "bg(phonetic)"
-    name[Group1]= "UniCyrl (phonetic; BG remaps v1)";
+    name[Group1]= "UniCyrl (phonetic; BG remaps v2)";
 
-    // --- BG корекции (без руски) ---
+    // ` -> ь, Shift+` -> Ь; на 3-то/4-то ниво остават ASCII (` и ~)
+    key <TLDE> { [ Cyrillic_softsign, Cyrillic_hardsign, grave, asciitilde ] };
 
     // w -> ж
     key <AD02> { [ Cyrillic_zhe,      Cyrillic_ZHE      ] };
@@ -89,11 +90,8 @@ xkb_symbols "phonetic" {
     // x -> ч
     key <AB02> { [ Cyrillic_che,      Cyrillic_CHE      ] };
 
-    // ; -> ь
-    key <AC10> { [ Cyrillic_softsign, colon, ellipsis, ellipsis ] };
-
-    // ` и ~ да си останат ASCII
-    key <TLDE> { [ grave, asciitilde ] };
+    // ; и : остават ASCII
+    key <AC10> { [ semicolon, colon ] };
 
     // подсигуряване на [ ] и \ (ш, щ, ю)
     key <AD11> { [ Cyrillic_sha,      Cyrillic_SHA      ] };

@@ -26,7 +26,7 @@ set -euo pipefail
 XKB_DIR="/usr/share/X11/xkb"
 SYM_DIR="$XKB_DIR/symbols"
 RULES_XML="$XKB_DIR/rules/evdev.xml"
-LAYOUT_NAME="UC"
+LAYOUT_NAME="uc"
 VARIANT_NAME="phonetic"
 BACKUP_DIR="/etc/netgalaxy/unicyrl-backup"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
@@ -79,7 +79,7 @@ xkb_symbols "phonetic" {
     name[Group1]= "UniCyrl (phonetic; BG remaps v2)";
 
     // ` -> ь, Shift+` -> Ь; на 3-то/4-то ниво остават ASCII (` и ~)
-    key <TLDE> { [ Cyrillic_softsign, Cyrillic_hardsign, grave, asciitilde ] };
+    key <TLDE> { [ Cyrillic_softsign, Cyrillic_SOFTSIGN, grave, asciitilde ] };
 
     // w -> ж
     key <AD02> { [ Cyrillic_zhe,      Cyrillic_ZHE      ] };
@@ -120,8 +120,7 @@ install_rules(){
       print "    <layout>";
       print "      <configItem>";
       print "        <name>" L "</name>";
-      print "        <shortDescription>uni</shortDescription>";
-      print "        <shortDescription>uni</shortDescription>";
+      print "        <shortDescription>bg</shortDescription>";
       print "        <description>UniCyrl (phonetic)</description>";
       print "        <languageList>";
       print "          <iso639Id>bul</iso639Id>";

@@ -55,7 +55,7 @@ refresh_cache(){
   # Изчистване на кеша и опит за прилагане при активния потребител
   rm -rf /var/lib/xkb/* 2>/dev/null || true
   set +e
-  sudo -u "$(logname 2>/dev/null || whoami)" sh -lc "setxkbmap $LAYOUT_NAME $VARIANT_NAME" >/dev/null 2>&1 || true
+  sudo -u "$(logname 2>/dev/null || whoami)" sh -lc "setxkbmap $LAYOUT_NAME" >/dev/null 2>&1 || true
   set -e
 }
 
@@ -73,7 +73,7 @@ install_symbols(){
 
   cat > "$target" <<'EOF'
 default  partial alphanumeric_keys
-xkb_symbols "phonetic" {
+xkb_symbols "basic" {
     // Базирано на стандартната българска фонетична
     include "bg(phonetic)"
     name[Group1]= "UniCyrl (phonetic; BG remaps v2)";
@@ -119,30 +119,22 @@ install_rules(){
 
   local tmp
   tmp="$(mktemp)"
-  awk -v L="$LAYOUT_NAME" -v V="$VARIANT_NAME" '
-    /<\/layoutList>/ && !done {
-      print "    <layout>";
-      print "      <configItem>";
-      print "        <name>" L "</name>";
-      print "        <shortDescription>bg</shortDescription>";
-      print "        <description>UniCyrl (phonetic)</description>";
-      print "        <languageList>";
-      print "          <iso639Id>bul</iso639Id>";
-      print "        </languageList>";
-      print "      </configItem>";
-      print "      <variantList>";
-      print "        <variant>";
-      print "          <configItem>";
-      print "            <name>" V "</name>";
-      print "            <description>UC (phonetic)</description>";
-      print "          </configItem>";
-      print "        </variant>";
-      print "      </variantList>";
-      print "    </layout>";
-      done=1
-    }
-    { print }
-  ' "$RULES_XML" > "$tmp"
+  awk -v L="$LAYOUT_NAME" '
+  /<\/layoutList>/ && !done {
+    print "    <layout>";
+    print "      <configItem>";
+    print "        <name>" L "</name>";
+    print "        <shortDescription>bg</shortDescription>";
+    print "        <description>UC (phonetic)</description>";
+    print "        <languageList>";
+    print "          <iso639Id>bul</iso639Id>";
+    print "        </languageList>";
+    print "      </configItem>";
+    print "    </layout>";
+    done=1
+  }
+  { print }
+' "$RULES_XML" > "$tmp"
 
   mv "$tmp" "$RULES_XML"
   chmod 644 "$RULES_XML"

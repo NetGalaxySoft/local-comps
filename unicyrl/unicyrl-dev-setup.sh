@@ -2,7 +2,8 @@
 # ==========================================================================
 #  unicyrl-dev-setup.sh – Инсталатор на XKB подредба "UniCyrl"
 # --------------------------------------------------------------------------
-#  Версия: 2.0 (без руски букви)
+#  Версия: 2.1 (без руски букви) – FIX: символният файл не се пише безусловно;
+#                                  FIX: uninstall използва LAYOUT_NAME
 #  Дата: 2025-09-26
 #  Автор: Ilko Yordanov / NetGalaxySoft
 # ==========================================================================
@@ -10,13 +11,13 @@
 #  Цел:
 #    - Създава XKB подредба "unicyrl" (variant "phonetic"), базирана на
 #      "Bulgarian (phonetic)".
-#    - Без допълнителни промени или руски букви.
+#    - Няма допълнителни промени или руски букви.
 #    - Регистрира подредбата в evdev.xml, за да се вижда и избира през KDE.
 #    - Позволява деинсталация с параметъра --uninstall.
 #
 #  Използване:
-#    sudo bash unicyrl-dev-setup.sh           # инсталиране
-#    sudo bash unicyrl-dev-setup.sh --uninstall # премахване
+#    sudo bash unicyrl-dev-setup.sh              # инсталиране
+#    sudo bash unicyrl-dev-setup.sh --uninstall  # премахване
 #
 # ==========================================================================
 
@@ -51,13 +52,26 @@ backup_file(){
 }
 
 refresh_cache(){
+  # Изчистване на кеша и опит за прилагане при активния потребител
   rm -rf /var/lib/xkb/* 2>/dev/null || true
   set +e
   sudo -u "$(logname 2>/dev/null || whoami)" sh -lc "setxkbmap $LAYOUT_NAME $VARIANT_NAME" >/dev/null 2>&1 || true
   set -e
 }
 
-cat > "$SYM_DIR/$LAYOUT_NAME" <<'EOF'
+evdev_has_layout(){
+  grep -q "<name>$LAYOUT_NAME</name>" "$RULES_XML"
+}
+
+install_symbols(){
+  require_root
+  mkdir -p "$SYM_DIR"
+  local target="$SYM_DIR/$LAYOUT_NAME"
+  if [[ -f "$target" ]]; then
+    backup_file "$target" "$BACKUP_DIR"
+  fi
+
+  cat > "$target" <<'EOF'
 default  partial alphanumeric_keys
 xkb_symbols "phonetic" {
     // Базирано на стандартната българска фонетична
@@ -88,11 +102,12 @@ xkb_symbols "phonetic" {
 };
 EOF
 
-evdev_has_layout(){
-  grep -q "<name>$LAYOUT_NAME</name>" "$RULES_XML"
+  chmod 644 "$target"
+  ok "Записан символен файл: $target"
 }
 
 install_rules(){
+  require_root
   backup_file "$RULES_XML" "$BACKUP_DIR"
 
   if evdev_has_layout; then
@@ -100,6 +115,7 @@ install_rules(){
     return
   fi
 
+  local tmp
   tmp="$(mktemp)"
   awk -v L="$LAYOUT_NAME" -v V="$VARIANT_NAME" '
     /<\/layoutList>/ && !done {
@@ -137,14 +153,15 @@ uninstall(){
 
   if evdev_has_layout; then
     backup_file "$RULES_XML" "$BACKUP_DIR"
+    local tmp
     tmp="$(mktemp)"
-    awk '
-      BEGIN{skip=0}
+    awk -v L="$LAYOUT_NAME" '
+      BEGIN{inlayout=0; buf=""}
       /<layout>/ {buf=$0; inlayout=1; next}
       inlayout && /<\/layout>/ {
         buf=buf ORS $0
-        if (buf ~ /<name>unicyrl<\/name>/) {
-          # пропускаме
+        if (buf ~ "<name>" L "</name>") {
+          # пропускаме този layout (не го печатаме)
         } else {
           print buf
         }
@@ -156,13 +173,14 @@ uninstall(){
       { print }
     ' "$RULES_XML" > "$tmp"
     mv "$tmp" "$RULES_XML"
-    ok "Премахнат layout \"unicyrl\" от evdev.xml"
+    ok "Премахнат layout \"$LAYOUT_NAME\" от evdev.xml"
   fi
 
-  if [[ -f "$SYM_DIR/$LAYOUT_NAME" ]]; then
-    backup_file "$SYM_DIR/$LAYOUT_NAME" "$BACKUP_DIR"
-    rm -f "$SYM_DIR/$LAYOUT_NAME"
-    ok "Премахнат файл: $SYM_DIR/$LAYOUT_NAME"
+  local target="$SYM_DIR/$LAYOUT_NAME"
+  if [[ -f "$target" ]]; then
+    backup_file "$target" "$BACKUP_DIR"
+    rm -f "$target"
+    ok "Премахнат файл: $target"
   fi
 
   refresh_cache
@@ -194,11 +212,10 @@ MSG
 }
 
 main(){
-  if [[ "${1:-}" == "--uninstall" ]]; then
-    uninstall
-  else
-    install
-  fi
+  case "${1:-}" in
+    --uninstall) uninstall ;;
+    ""|*)        install ;;
+  esac
 }
 
 main "$@"

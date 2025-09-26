@@ -26,7 +26,7 @@ set -euo pipefail
 XKB_DIR="/usr/share/X11/xkb"
 SYM_DIR="$XKB_DIR/symbols"
 RULES_XML="$XKB_DIR/rules/evdev.xml"
-LAYOUT_NAME="unicyrl"
+LAYOUT_NAME="UC"
 VARIANT_NAME="phonetic"
 BACKUP_DIR="/etc/netgalaxy/unicyrl-backup"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"

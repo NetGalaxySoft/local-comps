@@ -426,6 +426,18 @@ def load_config():
 mapping = load_map()
 config = load_config()
 escape_key = config.get("escape_key", "LeftAlt")
+
+# Нормализиране: имена на клавиши -> реални символи
+KEYNAME_TO_CHAR = {
+    "semicolon": ";",
+    "left bracket": "[",
+    "right bracket": "]",
+    "backslash": "\\",
+    "grave": "`",
+    "apostrophe": "'",
+    "quote": "'"
+}
+
 typed = ""
 
 print("🔠 UniCyrl е активен. Натисни Escape клавиша (по подразбиране: LeftAlt), за да въвеждаш латиница.")
@@ -436,7 +448,7 @@ def on_key(event):
     if event.event_type != "down":
         return
 
-    key = event.name
+    key = KEYNAME_TO_CHAR.get(event.name, event.name)
 
     if key == "space":
         typed += " "

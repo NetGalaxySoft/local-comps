@@ -93,6 +93,10 @@ xkb_symbols "phonetic" {
     // ; и : остават ASCII
     key <AC10> { [ semicolon, colon ] };
 
+    // Shift+, -> < ; Shift+. -> >
+    key <AB08> { [ comma,  less ] };
+    key <AB09> { [ period, greater ] };
+
     // подсигуряване на [ ] и \ (ш, щ, ю)
     key <AD11> { [ Cyrillic_sha,      Cyrillic_SHA      ] };
     key <AD12> { [ Cyrillic_shcha,    Cyrillic_SHCHA    ] };

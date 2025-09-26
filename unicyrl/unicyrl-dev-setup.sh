@@ -121,6 +121,7 @@ install_rules(){
       print "      <configItem>";
       print "        <name>" L "</name>";
       print "        <shortDescription>uni</shortDescription>";
+      print "        <shortDescription>uni</shortDescription>";
       print "        <description>UniCyrl (phonetic)</description>";
       print "        <languageList>";
       print "          <iso639Id>bul</iso639Id>";

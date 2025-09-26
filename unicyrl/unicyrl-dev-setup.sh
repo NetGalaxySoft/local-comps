@@ -57,21 +57,36 @@ refresh_cache(){
   set -e
 }
 
-install_symbols(){
-  backup_file "$SYM_DIR/$LAYOUT_NAME" "$BACKUP_DIR"
-  cat > "$SYM_DIR/$LAYOUT_NAME" <<'EOF'
+cat > "$SYM_DIR/$LAYOUT_NAME" <<'EOF'
 default  partial alphanumeric_keys
 xkb_symbols "phonetic" {
-    // Базирай се на българската фонетична, без допълнителни замени
+    // Базирано на стандартната българска фонетична
     include "bg(phonetic)"
+    name[Group1]= "UniCyrl (phonetic; BG remaps v1)";
 
-    // Име на варианта (чист фонетичен UniCyrl)
-    name[Group1]= "UniCyrl (phonetic)";
+    // --- BG корекции (без руски) ---
+
+    // w -> ж
+    key <AD02> { [ Cyrillic_zhe,      Cyrillic_ZHE      ] };
+
+    // v -> в
+    key <AB04> { [ Cyrillic_ve,       Cyrillic_VE       ] };
+
+    // x -> ч
+    key <AB02> { [ Cyrillic_che,      Cyrillic_CHE      ] };
+
+    // ; -> ь
+    key <AC10> { [ Cyrillic_softsign, colon, ellipsis, ellipsis ] };
+
+    // ` и ~ да си останат ASCII
+    key <TLDE> { [ grave, asciitilde ] };
+
+    // подсигуряване на [ ] и \ (ш, щ, ю)
+    key <AD11> { [ Cyrillic_sha,      Cyrillic_SHA      ] };
+    key <AD12> { [ Cyrillic_shcha,    Cyrillic_SHCHA    ] };
+    key <BKSL> { [ Cyrillic_yu,       Cyrillic_YU       ] };
 };
 EOF
-  chmod 644 "$SYM_DIR/$LAYOUT_NAME"
-  ok "Създаден XKB symbols файл: $SYM_DIR/$LAYOUT_NAME"
-}
 
 evdev_has_layout(){
   grep -q "<name>$LAYOUT_NAME</name>" "$RULES_XML"

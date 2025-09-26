@@ -134,7 +134,7 @@ install_rules(){
       print "        <variant>";
       print "          <configItem>";
       print "            <name>" V "</name>";
-      print "            <description>UniCyrl phonetic</description>";
+      print "            <description>UC (phonetic)</description>";
       print "          </configItem>";
       print "        </variant>";
       print "      </variantList>";
